@@ -1,65 +1,112 @@
-import Options.Applicative -- Provided by optparse-applicative
+{-# LANGUAGE CPP    #-}
+{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 
-type App = String
-type CommitMsg = String
+import           Options.Applicative
 
-data LogOptions = LogOptions
-  { version :: String
---  , from :: String
-  }
+import System.Directory
+
+#if __GLASGOW_HASKELL__ <= 702
+import           Data.Monoid
+(<>) :: Monoid a => a -> a -> a
+(<>) = mappend
+#endif
+
+data Args = Args CommonOpts Command
+  deriving Show
 
 data Command
-  = Log LogOptions
-  | Msg CommitMsg
+  = Install InstallOpts
+  | Validate
+  | Logs LogsOpts
+  deriving Show
 
-data Options = Options App Command
+data CommonOpts = CommonOpts
+  { optVerbosity :: Int }
+  deriving Show
 
-logOptions :: Parser String
-logOptions = strOption (long "version" <> metavar "VERSION" <> help "version help")
---         <*> strOption (long "from" <> metavar "FROM" <> help "from help")
+data InstallOpts = InstallOpts
+  { instGitPath :: FilePath }
+  deriving Show
 
+data LogsOpts = LogsOpts
+  { configTests :: Bool
+  , configFlags :: String }
+  deriving Show
+
+version :: Parser (a -> a)
+version = infoOption "0.1.0"
+  (  long "version"
+  <> help "Print version information" )
 
 withInfo :: Parser a -> String -> ParserInfo a
-withInfo opts desc = info (helper <*> opts) $ progDesc desc
+withInfo opts desc = info opts $ progDesc desc
 
-parseLog :: Parser Command
-parseLog = Log . LogOptions <$> logOptions
---             <*> strOption (
---               long "version" <>
---               metavar "VERSION" <>
---               help "version help")
---             <*> strOption (
---               long "from" <>
---               metavar "FROM" <>
---               help "from help")
+parser :: Parser Args
+parser = Args <$> commonOpts <*> commandParser
 
-parseMsg :: Parser Command
-parseMsg = Msg <$> argument str (metavar "COMMIT_MSG")
+commandParser :: Parser Command
+commandParser = hsubparser
+   $ command "install" (installParser `withInfo` "Installs required git hooks")
+  <> command "validate" (validateParser `withInfo` "Validate Git Commits")
+  <> command "logs" (logsParser `withInfo` "Parse Git Log file to create Changelog")
 
-parseCommand :: Parser Command
-parseCommand = subparser $
-    command "log" (parseLog `withInfo` "Generate a changelog from git history") <>
-    command "msg" (parseMsg `withInfo` "Validate commit message structure")
+commonOpts :: Parser CommonOpts
+commonOpts = CommonOpts
+  <$> option auto
+      ( short 'v'
+     <> long "verbose"
+     <> metavar "LEVEL"
+     <> help "Set verbosity to LEVEL"
+     <> value 0 )
 
-parseApp :: Parser App
-parseApp = strOption $
-    short 'a' <> long "app" <> metavar "COMPILE-APP" <>
-    help "Heroku app on which to compile"
+installParser :: Parser Command
+installParser = Install <$> installOpts
 
-parseOptions :: Parser Options
-parseOptions = Options
-               <$> parseApp
-               <*> parseCommand
+installOpts :: Parser InstallOpts
+installOpts = InstallOpts
+  <$> strOption
+      ( long "gitdir"
+     <> metavar "DIR"
+     <> help "Set path to .git - defaults to current dir"
+     <> value ".git/")
 
-withOptions :: (Options -> IO ()) -> IO ()
-withOptions f = f =<< execParser
-    (parseOptions `withInfo` "Interact with the heroku build API")
+validateParser :: Parser Command
+validateParser = pure Validate
 
-run :: Options -> IO ()
-run (Options app cmd) = do
-  case cmd of
-   Log s -> putStrLn $ "log"
-   Msg msg -> putStrLn $ "msg"
+logsParser :: Parser Command
+logsParser = Logs <$> logsOpts
 
-main :: IO ()
-main = withOptions run
+logsOpts :: Parser LogsOpts
+logsOpts = LogsOpts
+  <$> switch
+      ( long "enable-tests"
+     <> help "Enable compilation of test suites" )
+  <*> strOption
+      ( short 'f'
+     <> long "flags"
+     <> metavar "FLAGS"
+     <> help "Enable the given flag" )
+
+pinfo :: ParserInfo Args
+pinfo = (version <*> helper <*> parser) `withInfo` "Git Tools Command Line Helper"
+
+check :: (FilePath -> IO Bool) -> FilePath -> IO ()
+check p s = do
+  result <- p s
+  putStrLn $ s ++ if result then " does exist" else " does not exist"
+
+runInstall :: InstallOpts -> IO()
+runInstall inOpts = do
+  result <- doesDirectoryExist $ instGitPath inOpts
+  if result then print "a" else print "b"
+  print "Install"
+
+run :: Args -> IO()
+run (Args cOpts cmd) = case cmd of
+  Install inOpts -> runInstall inOpts
+  Validate -> print (Args cOpts cmd)
+  Logs e -> print (Args cOpts cmd)
+
+main :: IO()
+main = execParser pinfo >>= run

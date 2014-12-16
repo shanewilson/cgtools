@@ -63,6 +63,7 @@ executable cgtools
   build-depends:       base >=4.7 && <4.8
                      , optparse-applicative >=0.11
                      , text >= 1.2.0.0
+                     , directory >= 1.2.1.0
   
   -- Directories containing source files.
   -- hs-source-dirs:      
