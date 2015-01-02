@@ -1,112 +1,83 @@
-{-# LANGUAGE CPP    #-}
-{-# OPTIONS_GHC -Wall #-}
-{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
+module CGTools.Validate (runValidate) where
 
-import           Options.Applicative
+import Prelude hiding (unlines, lines, null, writeFile, readFile, putStr, putStrLn)
+import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
+import System.IO (hSetBuffering, stdin, BufferMode(NoBuffering))
+import System.Process (rawSystem)
+import System.Exit (exitFailure, exitSuccess, ExitCode)
+import Text.Regex.Posix ((=~))
+import Data.Maybe (catMaybes)
+import Control.Monad (forever, when)
+import Safe (headDef)
 
-import System.Directory
+type Line = T.Text
+type Error = T.Text
 
-#if __GLASGOW_HASKELL__ <= 702
-import           Data.Monoid
-(<>) :: Monoid a => a -> a -> a
-(<>) = mappend
-#endif
+lengthCheck :: Int -> Int -> Line -> Maybe Error
+lengthCheck limit n l
+  | notUrl && tooLong = Just $ errorMsg n "Length must be <= " `T.append` T.pack (show limit) `T.append` " (is " `T.append` T.pack (show len) `T.append` ")"
+  | otherwise = Nothing
+  where
+    len = length (T.unpack l)
+    tooLong = len > limit
+    notUrl = " " `T.isInfixOf` l
 
-data Args = Args CommonOpts Command
-  deriving Show
+checkHeader :: Line -> Maybe Error
+checkHeader x
+  | formatError = em "Must follow format: type(scope): message"
+  | typeError = em ("Commit type not valid. Must be one of:\n#! " `T.append` T.pack (show validCommitTypes))
+  | otherwise = lengthCheck 50 1 x
+  where
+    pat = "^(.*)\\((.*)\\): (.*)$" :: String
+    (_,_,_,gs) = T.unpack x =~ pat :: (String, String, String, [String])
+    em = Just . errorMsg 1
+    formatError = length gs /= 3
+    validCommitTypes = ["feat", "fix", "docs", "style", "refactor", "test", "chore"]
+    typeError = headDef "" gs `notElem` validCommitTypes
 
-data Command
-  = Install InstallOpts
-  | Validate
-  | Logs LogsOpts
-  deriving Show
+errorMsg :: Int -> T.Text -> Error
+errorMsg n s = "#! [line " `T.append` T.pack (show n) `T.append` "] " `T.append` s
 
-data CommonOpts = CommonOpts
-  { optVerbosity :: Int }
-  deriving Show
+newlineCheck :: Line -> Maybe Error
+newlineCheck l
+  | not(T.null l) = Just $ errorMsg 2 "Must be an empty line"
+  | otherwise = Nothing
 
-data InstallOpts = InstallOpts
-  { instGitPath :: FilePath }
-  deriving Show
+checkLines :: Int -> Line -> Maybe Error
+checkLines n l = case n of
+  1 -> checkHeader l
+  2 -> newlineCheck l
+  _ -> lengthCheck 70 n l
 
-data LogsOpts = LogsOpts
-  { configTests :: Bool
-  , configFlags :: String }
-  deriving Show
+dropFromEndUntil :: (Line -> Bool) -> [Line] -> [Line]
+dropFromEndUntil p xs = reverse (dropWhile p (reverse xs))
 
-version :: Parser (a -> a)
-version = infoOption "0.1.0"
-  (  long "version"
-  <> help "Print version information" )
+commitSuccess :: [Line] -> FilePath -> IO ExitCode
+commitSuccess ls commitFile = do
+  TIO.writeFile commitFile (T.unlines ls)
+  exitSuccess
 
-withInfo :: Parser a -> String -> ParserInfo a
-withInfo opts desc = info opts $ progDesc desc
+commitFail :: [Error] -> [Line] -> FilePath -> IO ExitCode
+commitFail es ls commitFile = do
+  hSetBuffering stdin NoBuffering
+  TIO.putStrLn "Invalid git commit message format. Press y to edit and n to cancel the commit. [Y/n]: "
+  answer <- getChar
+  when (answer == 'n') exitFailure
+  TIO.writeFile commitFile (T.unlines ls `T.append` "\n" `T.append` T.unlines es)
+  rawSystem "vim" [commitFile]
 
-parser :: Parser Args
-parser = Args <$> commonOpts <*> commandParser
+commitStatus :: [Error] -> [Line] -> FilePath -> IO ExitCode
+commitStatus es ls commitFile = case es of
+  [] -> commitSuccess ls commitFile
+  _  -> commitFail es ls commitFile
 
-commandParser :: Parser Command
-commandParser = hsubparser
-   $ command "install" (installParser `withInfo` "Installs required git hooks")
-  <> command "validate" (validateParser `withInfo` "Validate Git Commits")
-  <> command "logs" (logsParser `withInfo` "Parse Git Log file to create Changelog")
-
-commonOpts :: Parser CommonOpts
-commonOpts = CommonOpts
-  <$> option auto
-      ( short 'v'
-     <> long "verbose"
-     <> metavar "LEVEL"
-     <> help "Set verbosity to LEVEL"
-     <> value 0 )
-
-installParser :: Parser Command
-installParser = Install <$> installOpts
-
-installOpts :: Parser InstallOpts
-installOpts = InstallOpts
-  <$> strOption
-      ( long "gitdir"
-     <> metavar "DIR"
-     <> help "Set path to .git - defaults to current dir"
-     <> value ".git/")
-
-validateParser :: Parser Command
-validateParser = pure Validate
-
-logsParser :: Parser Command
-logsParser = Logs <$> logsOpts
-
-logsOpts :: Parser LogsOpts
-logsOpts = LogsOpts
-  <$> switch
-      ( long "enable-tests"
-     <> help "Enable compilation of test suites" )
-  <*> strOption
-      ( short 'f'
-     <> long "flags"
-     <> metavar "FLAGS"
-     <> help "Enable the given flag" )
-
-pinfo :: ParserInfo Args
-pinfo = (version <*> helper <*> parser) `withInfo` "Git Tools Command Line Helper"
-
-check :: (FilePath -> IO Bool) -> FilePath -> IO ()
-check p s = do
-  result <- p s
-  putStrLn $ s ++ if result then " does exist" else " does not exist"
-
-runInstall :: InstallOpts -> IO()
-runInstall inOpts = do
-  result <- doesDirectoryExist $ instGitPath inOpts
-  if result then print "a" else print "b"
-  print "Install"
-
-run :: Args -> IO()
-run (Args cOpts cmd) = case cmd of
-  Install inOpts -> runInstall inOpts
-  Validate -> print (Args cOpts cmd)
-  Logs e -> print (Args cOpts cmd)
-
-main :: IO()
-main = execParser pinfo >>= run
+runValidate :: IO ()
+runValidate = forever $ do
+  fh <- TIO.readFile commitFile
+  -- removes old errors and extra newlines at the bottom of the message
+  let ls = dropFromEndUntil (\x -> T.null x || "#!" `T.isPrefixOf` x) (T.lines fh) :: [Line]
+  let es = catMaybes $ zipWith checkLines [1..] ls :: [Error]
+  commitStatus es ls commitFile
+  where
+    commitFile = ".git/COMMIT_EDITMSG"
