@@ -1,4 +1,4 @@
-module CGTools.Validate (runValidate) where
+module CGTools.Validate (runValidate, dropFromEndWhile) where
 
 import Prelude hiding (unlines, lines, null, writeFile, readFile, putStr, putStrLn)
 import qualified Data.Text as T
@@ -50,8 +50,8 @@ checkLines n l = case n of
   2 -> newlineCheck l
   _ -> lengthCheck 70 n l
 
-dropFromEndUntil :: (Line -> Bool) -> [Line] -> [Line]
-dropFromEndUntil p xs = reverse (dropWhile p (reverse xs))
+dropFromEndWhile :: (a -> Bool) -> [a] -> [a]
+dropFromEndWhile p xs = reverse (dropWhile p (reverse xs))
 
 commitSuccess :: [Line] -> FilePath -> IO ExitCode
 commitSuccess ls commitFile = do
@@ -76,7 +76,7 @@ runValidate :: IO ()
 runValidate = forever $ do
   fh <- TIO.readFile commitFile
   -- removes old errors and extra newlines at the bottom of the message
-  let ls = dropFromEndUntil (\x -> T.null x || "#!" `T.isPrefixOf` x) (T.lines fh) :: [Line]
+  let ls = dropFromEndWhile (\x -> T.null x || "#!" `T.isPrefixOf` x) (T.lines fh) :: [Line]
   let es = catMaybes $ zipWith checkLines [1..] ls :: [Error]
   commitStatus es ls commitFile
   where

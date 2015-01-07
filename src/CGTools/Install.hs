@@ -1,6 +1,5 @@
 module CGTools.Install (runInstall) where
 
-
 import Prelude hiding (writeFile, unlines)
 import Data.Text (unlines)
 import Data.Text.IO (writeFile)

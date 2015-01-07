@@ -75,4 +75,5 @@ run (Args cOpts cmd) = case cmd of
   Validate -> runValidate
   Logs logOpts -> runLog logOpts
 
+cli :: IO ()
 cli = execParser pinfo >>= run
