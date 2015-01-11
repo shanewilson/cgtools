@@ -15,6 +15,8 @@ category:            Development
 build-type:          Simple
 cabal-version:       >=1.10
 
+data-files: scaffold/prepare-commit-msg
+
 source-repository head
     type:               git
     branch:             master
@@ -30,6 +32,7 @@ executable cgtools
                         -fno-warn-name-shadowing
   default-extensions:  OverloadedStrings
                        ExtendedDefaultRules
+                       DeriveDataTypeable
                        CPP
 
   -- Other library packages from which modules are imported.
@@ -44,6 +47,7 @@ executable cgtools
                      , safe
                      , bytestring
                      , ansi-terminal
+                     , hastache
 
   main-is:             Main.hs
   -- from Tasty cabal with ansi-terminal
@@ -63,6 +67,7 @@ library
                         -fno-warn-name-shadowing
   default-extensions:  OverloadedStrings
                        ExtendedDefaultRules
+                       DeriveDataTypeable
                        CPP
 
   build-depends:        base >= 4.6 && < 5
@@ -76,6 +81,7 @@ library
                        , safe
                        , bytestring
                        , ansi-terminal
+                       , hastache
 
   -- from Tasty cabal with ansi-terminal
   cpp-options: -DCOLORS
@@ -91,6 +97,7 @@ executable test-cgtools
                         -fno-warn-name-shadowing
   default-extensions:   OverloadedStrings
                         ExtendedDefaultRules
+                        DeriveDataTypeable
                         CPP
   main-is:              Test.hs
   other-modules:        CGTools.Validate.Test
@@ -113,6 +120,7 @@ test-suite test
                         -fno-warn-name-shadowing
   default-extensions:  OverloadedStrings
                        ExtendedDefaultRules
+                       DeriveDataTypeable
                        CPP
 
   main-is:              Test.hs
