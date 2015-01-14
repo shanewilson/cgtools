@@ -1,6 +1,6 @@
 module CGTools.Log (runLog) where
 
-import System.Process
+import System.Process (readProcess)
 import Text.Regex.Posix ((=~))
 
 import qualified Data.Text as T
