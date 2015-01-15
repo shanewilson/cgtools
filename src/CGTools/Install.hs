@@ -23,8 +23,7 @@ runInstall = do
   p <- getPermissions commitHook
   setPermissions commitHook (p {executable = True})
   where
-    ctx = Ctx { path = ".cabal-sandbox/bin/cgtools" }
-    context = mkGenericContext ctx
+    context = mkGenericContext Ctx { path = "./cgtools" }
 
 getGitPath :: IO String
 getGitPath = readProcess "git" [  "rev-parse", "--git-dir" ] ""
