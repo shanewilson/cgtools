@@ -13,6 +13,7 @@ import Text.Hastache.Context (mkGenericContext)
 import Data.Data (Data, Typeable)
 import Paths_cgtools
 import System.IO (hFlush, stdout)
+import System.Environment.FindBin (getProgPath)
 
 data Ctx = Ctx {
   path :: Text
@@ -20,13 +21,14 @@ data Ctx = Ctx {
 
 runInstall :: IO ()
 runInstall = do
+  bin <- getProgPath
+  let binPath = pack $ bin ++ "/cgtools"
+  let context = mkGenericContext Ctx { path =  binPath }
   g <- getGitPath
   let commitHook = getPrepareCommitPath (pack g)
   genFile context "prepare-commit-msg" commitHook
   p <- getPermissions commitHook
   setPermissions commitHook (p {executable = True})
-  where
-    context = mkGenericContext Ctx { path = "./cgtools" }
 
 getGitPath :: IO String
 getGitPath = readProcess "git" [  "rev-parse", "--git-dir" ] ""

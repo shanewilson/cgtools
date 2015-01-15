@@ -48,6 +48,7 @@ executable cgtools
                      , bytestring
                      , ansi-terminal
                      , hastache
+                     , FindBin
 
   main-is:             Main.hs
   -- from Tasty cabal with ansi-terminal
@@ -82,6 +83,7 @@ library
                        , bytestring
                        , ansi-terminal
                        , hastache
+                       , FindBin
 
   -- from Tasty cabal with ansi-terminal
   cpp-options: -DCOLORS
