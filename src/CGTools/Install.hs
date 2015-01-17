@@ -21,36 +21,70 @@ data Ctx = Ctx {
 
 runInstall :: IO ()
 runInstall = do
+  -- path to cgtools
   bin <- getProgPath
-  let binPath = pack $ bin ++ "/cgtools"
-  let context = mkGenericContext Ctx { path =  binPath }
+  let context = getContext bin
+  createCommitHooks context
+  createBashCompletion context
+
+
+getContext :: String -> MuContext IO
+getContext bin = mkGenericContext Ctx { path =  binPath }
+  where
+   binPath = pack $ bin ++ "/cgtools"
+
+
+createBashCompletion :: MuContext IO -> IO ()
+createBashCompletion context = do
+  putStr "generate bash completion? (y/n [y]): "
+  hFlush stdout
+  yn <- getChar
+  when (yn /= 'n') $
+    genFile context "bash-completion" "cgtools-completion.sh"
+
+
+createCommitHooks :: MuContext IO -> IO ()
+createCommitHooks context = do
   g <- getGitPath
   let commitHook = getPrepareCommitPath (pack g)
   genFile context "prepare-commit-msg" commitHook
   p <- getPermissions commitHook
   setPermissions commitHook (p {executable = True})
 
+
 getGitPath :: IO String
 getGitPath = readProcess "git" [  "rev-parse", "--git-dir" ] ""
+
 
 getPrepareCommitPath :: Text -> FilePath
 getPrepareCommitPath g = unpack $ strip g `append` "/hooks/prepare-commit-msg"
 
+
+getBackupName :: String -> String -> String
+getBackupName f backup = case backup of
+  [] -> f <.> "bak"
+  _  -> backup
+
+
+offerBackup :: FilePath -> IO ()
+offerBackup output = do
+  exists <- doesFileExist output
+  when exists $ do
+    let (d,f) = splitFileName output
+    putStr $ "backup " ++ f ++ "? (y/n [y]): "
+    hFlush stdout
+    bkup <- getChar
+    when (bkup /= 'n') $ do
+      putStr $ "name of backup? [" ++ f <.> "bak" ++ "]: "
+      hFlush stdout
+      backup <- getLine
+      let backupName = d </> getBackupName f backup
+      renameFile output backupName
+
+
 genFile :: MuContext IO -> FilePath -> FilePath -> IO ()
 genFile context input output = do
-    exists <- doesFileExist output
-    when exists $ do
-      let (d,f) = splitFileName output
-      putStr $ "backup " ++ f ++ "? (y/n [y]): "
-      hFlush stdout
-      bkup <- getChar
-      when (bkup /= 'n') $ do
-        putStr $ "name of backup ["++ f ++".bak]: "
-        hFlush stdout
-        backup <- getLine
-        let backupName = if backup == "" then d </> f <.> "bak" else d </> backup
-        renameFile output backupName
-
+    offerBackup output
     pkgfileName <- getDataFileName ("scaffold/" ++ input)
     template <- readFile pkgfileName
     transformedFile <- hastacheStr defaultConfig template context

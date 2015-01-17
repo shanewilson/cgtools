@@ -1,0 +1,15 @@
+#!/bin/sh
+
+_cgtools()
+{
+    local cmdline
+    CMDLINE=(--bash-completion-index $COMP_CWORD)
+
+    for arg in ${COMP_WORDS[@]}; do
+        CMDLINE=(${CMDLINE[@]} --bash-completion-word $arg)
+    done
+
+    COMPREPLY=( $({{path}} "${CMDLINE[@]}") )
+}
+
+complete -o filenames -F _cgtools cgtools

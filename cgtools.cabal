@@ -16,6 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 data-files: scaffold/prepare-commit-msg
+            , scaffold/bash-completion
 
 source-repository head
     type:               git
