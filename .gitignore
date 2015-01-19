@@ -13,3 +13,4 @@ cabal.sandbox.config
 cabal.config
 cgtools
 cgtools-completion.sh
+cgtools-completion.sh.bak
