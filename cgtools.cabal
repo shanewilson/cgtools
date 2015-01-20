@@ -60,6 +60,7 @@ library
   exposed-modules:      CGTools
                       , CGTools.CLI
                       , CGTools.Install
+                      , CGTools.Install.Internal
                       , CGTools.Validate
                       , CGTools.Log
   -- other-modules:
@@ -105,7 +106,8 @@ executable test-cgtools
                         DeriveDataTypeable
                         CPP
   main-is:              Test.hs
-  other-modules:        CGTools.Validate.Test
+  other-modules:        CGTools.Install.Test
+                      , CGTools.Validate.Test
   default-language:     Haskell2010
   build-depends:        base >=4.6 && < 5
                       , cgtools

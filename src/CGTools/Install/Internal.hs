@@ -22,8 +22,8 @@ data Ctx = Ctx {
 } deriving (Data, Typeable)
 
 
-getPrepareCommitPath :: Text -> FilePath
-getPrepareCommitPath g = unpack $ strip g `append` "/hooks/prepare-commit-msg"
+genHookPath :: String -> String
+genHookPath g = unpack $ strip (pack g) `append` "/hooks/prepare-commit-msg"
 
 
 getWithDefault :: FilePath -> FilePath -> FilePath
@@ -60,7 +60,7 @@ createBashCompletion context = do
 createCommitHooks :: MuContext IO -> IO ()
 createCommitHooks context = do
   g <- getGitPath
-  let commitHook = getPrepareCommitPath (pack g)
+  let commitHook = genHookPath g
   genFile context "prepare-commit-msg" commitHook
   p <- getPermissions commitHook
   setPermissions commitHook (p {executable = True})
