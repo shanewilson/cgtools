@@ -40,6 +40,7 @@ executable cgtools
   build-depends:       base >=4.7 && < 5
                      , optparse-applicative
                      , text
+                     , formatting
                      , directory
                      , filepath
                      , regex-posix
@@ -75,6 +76,7 @@ library
   build-depends:        base >= 4.6 && < 5
                        , optparse-applicative
                        , text
+                       , formatting
                        , directory
                        , filepath
                        , regex-posix

@@ -1,7 +1,7 @@
 module CGTools.CLI (cli) where
 
 import Options.Applicative
-import System.IO (hSetBuffering, stdout, stdin, BufferMode(NoBuffering))
+import System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))
 
 import CGTools.Install (runInstall)
 import CGTools.Validate (runValidate)
@@ -79,5 +79,4 @@ run (Args cOpts cmd) = case cmd of
 cli :: IO ()
 cli = do
   hSetBuffering stdout NoBuffering
---   hSetBuffering stdin NoBuffering
   execParser pinfo >>= run
