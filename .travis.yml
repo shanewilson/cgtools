@@ -2,9 +2,10 @@ env:
  - CABALVER=1.20 GHCVER=7.8.4
 
 -notifications:
-  - email: false
+ - email: false
 
 cache:
+ - apt
  directories:
  - $HOME/.ghc
  - $HOME/.cabal
@@ -20,7 +21,6 @@ before_install:
 install:
  - cabal --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
- - wget http://www.stackage.org/lts/1.0/cabal.config
  - travis_retry cabal update
  - cabal-1.20 install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls
 

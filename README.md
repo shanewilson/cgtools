@@ -4,43 +4,35 @@ Git Hooks and Changelog Generator based on Conventional Changelog
 
 [![Build Status](https://travis-ci.org/shanewilson/cgtools.svg)](https://travis-ci.org/shanewilson/cgtools)
 
+- [Install](#install)
+- [Git Hooks](#git-hooks)
+- [Change Log](#change-log)
+
 ## Setup
+
+To install **cgtools** simply drop the bin into your project directory, run `./cgtools install` and follow the prompts.
+
+### Bash Completion
+
+**cgtools** comes with *Bash Completion*. You can test it out by sourcing the file: `source cgtools-completion.sh` or adding it to your `.bashrc`. 
+Note: If you use `zsh` you might need to add the following to your `.zshrc`:
+
+```
+autoload bashcompinit
+bashcompinit
+```
+
+### Install
+
+```
+$ chmod u+x cgtools
+$ ./cgtools install
+generate bash completion? (y/n [y]): y
+$ source cgtools-completion.sh
+```
+
 ## Git Hooks
-### Commit Message
 
-```
-gt hooks commitmsg $1
-```
+### Prepare Commit Message
 
-## Log
-
-```
-gt log --version=... --subtitle=... --file=... --from=... --to=... --repo=... 
-```
-
-## Release
-### Prepare
-
-- bump version
-- generate changelog
-
-```
-// Version 1.0.0-SNAPSHOT
-gt prerelease
-// Version bump to 1.0.0-RC1
-// CHANGELOG updates
-// <Custom activities here>
-gt publish
-// creates tag for 1.0.0-RC1
-// creates git release from CHANGELOG
-// 
-```
-
-### Publish
-
-```
-gt release publish 1.0.0
-```
-
-### Next
-gt release next 1.1.0-SNAPSHOT
+## Change Log
