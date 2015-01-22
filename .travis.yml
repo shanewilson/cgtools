@@ -20,8 +20,8 @@ before_install:
 install:
  - cabal --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
- - pwd
- #- mv cabal.config /home/travis/.cabal/config
+ - sudo mkdir -p /home/travis/.cabal/
+ - sudo mv cabal.config /home/travis/.cabal/config
  - cabal update
  - cabal-1.20 install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls
 
