@@ -1,6 +1,8 @@
-# Git Release Tools
+# Conventional Git Tools
 
 Git Hooks and Changelog Generator based on Conventional Changelog
+
+[![Build Status](https://travis-ci.org/shanewilson/cgtools.svg)](https://travis-ci.org/shanewilson/cgtools)
 
 ## Setup
 ## Git Hooks
