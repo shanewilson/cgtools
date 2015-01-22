@@ -6,7 +6,7 @@ import CGTools.Install.Test (installSuite)
 -- import CGTools.Validate.Test (validateSuite)
 
 tests :: TestTree
-tests = testGroup "All Tests" [  ]
+tests = testGroup "All Tests" [ installSuite ]
 
 main :: IO ()
 main = defaultMain tests
