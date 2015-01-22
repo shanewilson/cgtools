@@ -21,7 +21,7 @@ install:
  - cabal --version
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
  - mkdir -p /home/travis/.cabal
- - wget -O /home/travis/.cabal/config http://www.stackage.org/lts/1.0/cabal.config
+ - mv cabal.config /home/travis/.cabal/config
  - cabal update
  - cabal-1.20 install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls
 
