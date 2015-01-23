@@ -9,6 +9,6 @@ runInstall :: IO ()
 runInstall = do
   checkDependencies
   bin <- getProgPath
-  let context = getContext bin
-  createCommitHooks context
-  createBashCompletion context
+  let path = bin ++ "/cgtools"
+  createCommitHooks path
+  createBashCompletion path
