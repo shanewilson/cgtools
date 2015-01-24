@@ -11,7 +11,7 @@ output :: ColorIntensity -> Color -> String -> Verbosity -> IO ()
 output  _ _ _ Normal  = return ()
 output  i c s Verbose = do
   setSGR [SetColor Foreground i c]
-  putStr s
+  putStrLn s
   setSGR []
 
 
@@ -20,7 +20,7 @@ info = output Vivid White
 
 
 success :: Verbosity -> IO ()
-success = output Dull Green "OK\n"
+success = output Dull Green "OK"
 
 
 runInstall :: CommonOpts -> InstallOpts -> IO ()
