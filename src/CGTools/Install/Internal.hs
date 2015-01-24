@@ -36,8 +36,8 @@ checkDependencies =
     exitFailure
 
 
-createBashCompletion :: FilePath -> Safety -> Verbosity -> IO ()
-createBashCompletion path safety verbosity = genFile (sformat (
+createBashCompletion :: FilePath -> Safety -> IO ()
+createBashCompletion path = genFile (sformat (
     "#!/bin/sh\
     \n\n_cgtools()\n{\
     \n\tlocal cmdline\
@@ -48,11 +48,11 @@ createBashCompletion path safety verbosity = genFile (sformat (
     \n\n\tCOMPREPLY=( $("% string %" \"${CMDLINE[@]}\") )\
     \n}\n\ncomplete -o filenames -F _cgtools cgtools")
     path)
-    "cgtools-completion.sh" safety
+    "cgtools-completion.sh"
 
 
-createCommitHooks :: FilePath -> Safety -> Verbosity -> IO ()
-createCommitHooks path safety verbosity = do
+createCommitHooks :: FilePath -> Safety -> IO ()
+createCommitHooks path safety = do
   g <- getGitPath
   let commitHook = genHookPath g
   genFile (sformat (
