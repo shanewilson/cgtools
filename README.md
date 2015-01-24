@@ -8,27 +8,43 @@ Git Hooks and Changelog Generator based on Conventional Changelog
 - [Git Hooks](#git-hooks)
 - [Change Log](#change-log)
 
-## Setup
+## Install
 
-To install **cgtools** simply drop the bin into your project directory, run `./cgtools install` and follow the prompts.
+To install **cgtools** simply drop the bin into your project directory, run `./cgtools install -v`.
+
+```
+$ chmod u+x cgtools
+$ ./cgtools install -v
+Checking dependencies...
+OK
+Generating Git Hooks...
+OK
+```
 
 ### Bash Completion
 
-**cgtools** comes with *Bash Completion*. You can test it out by sourcing the file: `source cgtools-completion.sh` or adding it to your `.bashrc`. 
+**cgtools** can generate *Bash Completion* with the flag `-b` or `--bash-completion`.
+
+```
+$ chmod u+x cgtools
+$ ./cgtools install -b -v
+Checking dependencies...
+OK
+Generating Git Hooks...
+OK
+Generating Bash Completion...
+OK
+$ source cgtools-completion.sh
+$ ./cgtools <tab>
+--help     --verbose  --version  -h         -v         install    logs       validate
+```
+
+You can test it out by sourcing the file: `source cgtools-completion.sh` or adding it to your `.bashrc`.
 Note: If you use `zsh` you might need to add the following to your `.zshrc`:
 
 ```
 autoload bashcompinit
 bashcompinit
-```
-
-### Install
-
-```
-$ chmod u+x cgtools
-$ ./cgtools install
-generate bash completion? (y/n [y]): y
-$ source cgtools-completion.sh
 ```
 
 ## Git Hooks
