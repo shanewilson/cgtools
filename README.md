@@ -56,10 +56,13 @@ bashcompinit
 
 ### Source
 
-To build from source you will need to install Haskell
+To build from source you will need to install [Haskell](https://www.haskell.org/haskellwiki/Haskell)
+
+- [Haskell Guide](https://github.com/bitemyapp/learnhaskell#getting-started)
 
 ```
 $ git clone https://github.com/shanewilson/cgtools.git
+$ cd cgtools
 $ cabal sandbox init
 $ cabal install --enable-tests --enable-benchmarks --force-reinstalls
 $ .cabal-sandbox/bin/cgtools --help
