@@ -3,26 +3,10 @@ module CGTools.CLI (cli) where
 import Options.Applicative
 import System.IO (hSetBuffering, stdout, BufferMode(NoBuffering))
 
+import CGTools.Types
 import CGTools.Install (runInstall)
 import CGTools.Validate (runValidate)
 import CGTools.Log (runLog)
-
-data Args = Args CommonOpts Command
-  deriving Show
-
-data Command
-  = Install
-  | Validate
-  | Logs LogsOpts
-  deriving Show
-
-data CommonOpts = CommonOpts
-  { optVerbosity :: Int }
-  deriving Show
-
-data LogsOpts = LogsOpts
-  { output :: String }
-  deriving Show
 
 version :: Parser (a -> a)
 version = infoOption "0.1.0"
@@ -43,15 +27,24 @@ commandParser = hsubparser
 
 commonOpts :: Parser CommonOpts
 commonOpts = CommonOpts
-  <$> option auto
-      ( short 'v'
-     <> long "verbose"
-     <> metavar "LEVEL"
-     <> help "Set verbosity to LEVEL"
-     <> value 0 )
+  <$> flag Normal Verbose
+       ( long "verbose"
+       <> short 'v'
+       <> help "Enable verbose mode" )
 
 installParser :: Parser Command
-installParser = pure Install
+installParser = Install <$> installOpts
+
+installOpts :: Parser InstallOpts
+installOpts = InstallOpts
+  <$> switch
+        ( long "bash-completion"
+         <> short 'b'
+         <> help "Output bash completion script" )
+  <*> flag Safe Dangerous
+       ( long "overwrite"
+        <> short 'o'
+        <> help "Overwrite existing files without prompt" )
 
 validateParser :: Parser Command
 validateParser = pure Validate
@@ -72,7 +65,7 @@ pinfo = (version <*> helper <*> parser) `withInfo` "Git Tools Command Line Helpe
 
 run :: Args -> IO ()
 run (Args cOpts cmd) = case cmd of
-  Install -> runInstall
+  Install insOpts -> runInstall cOpts insOpts
   Validate -> runValidate
   Logs logOpts -> runLog logOpts
 

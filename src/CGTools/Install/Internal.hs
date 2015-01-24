@@ -1,6 +1,6 @@
 module CGTools.Install.Internal where
 
-import Prelude hiding (readFile, writeFile, unlines, print)
+import Prelude (return, ($), getLine, notElem, FilePath, IO, Bool(True), String)
 import Data.Text (Text, unpack, pack, append, strip)
 import Formatting (fprint, (%), string, sformat)
 import Data.Text.IO (writeFile)
@@ -8,17 +8,14 @@ import System.Directory (getPermissions, setPermissions, executable, doesFileExi
 import System.Process (readProcess)
 import System.FilePath (splitFileName, (</>), (<.>))
 import System.Exit (exitFailure)
-import Data.Data (Data, Typeable)
+import Data.Data (Typeable)
 import Control.Monad (when)
 import Control.Exception
 
-
-data Ctx = Ctx {
-  path :: Text
-} deriving (Data, Typeable)
+import CGTools.Types (Safety(..), Verbosity(..))
 
 
-genHookPath :: String -> String
+genHookPath :: FilePath -> FilePath
 genHookPath g = unpack $ strip (pack g) `append` "/hooks/prepare-commit-msg"
 
 
@@ -39,29 +36,29 @@ checkDependencies =
     exitFailure
 
 
-createBashCompletion :: FilePath -> IO ()
-createBashCompletion path = do
-  fprint "generate bash completion? (y/n [y]): "
-  yn <- getLine
-  when (yn `notElem` ["n", "no"]) $
-    genFile (sformat (
-              "#!/bin/sh\
-              \n\n_cgtools()\n{\
-              \n\tlocal cmdline\
-              \n\tCMDLINE=(--bash-completion-index $COMP_CWORD)\
-              \n\n\tfor arg in ${COMP_WORDS[@]}; do\
-              \n\t\tCMDLINE=(${CMDLINE[@]} --bash-completion-word $arg)\
-              \n\tdone\
-              \n\n\tCOMPREPLY=( $("% string %" \"${CMDLINE[@]}\") )\
-              \n}\n\ncomplete -o filenames -F _cgtools cgtools")
-              path) "cgtools-completion.sh"
+createBashCompletion :: FilePath -> Safety -> Verbosity -> IO ()
+createBashCompletion path safety verbosity = genFile (sformat (
+    "#!/bin/sh\
+    \n\n_cgtools()\n{\
+    \n\tlocal cmdline\
+    \n\tCMDLINE=(--bash-completion-index $COMP_CWORD)\
+    \n\n\tfor arg in ${COMP_WORDS[@]}; do\
+    \n\t\tCMDLINE=(${CMDLINE[@]} --bash-completion-word $arg)\
+    \n\tdone\
+    \n\n\tCOMPREPLY=( $("% string %" \"${CMDLINE[@]}\") )\
+    \n}\n\ncomplete -o filenames -F _cgtools cgtools")
+    path)
+    "cgtools-completion.sh" safety
 
 
-createCommitHooks :: FilePath -> IO ()
-createCommitHooks path = do
+createCommitHooks :: FilePath -> Safety -> Verbosity -> IO ()
+createCommitHooks path safety verbosity = do
   g <- getGitPath
   let commitHook = genHookPath g
-  genFile (sformat ("#!/bin/sh\n\nexec < /dev/tty\n" % string % " validate") path) commitHook
+  genFile (sformat (
+    "#!/bin/sh\n\nexec < /dev/tty\n" % string % " validate")
+    path)
+    commitHook safety
   p <- getPermissions commitHook
   setPermissions commitHook (p {executable = True})
 
@@ -70,8 +67,9 @@ getGitPath :: IO String
 getGitPath = readProcess "git" [  "rev-parse", "--git-dir" ] ""
 
 
-offerBackup :: FilePath -> IO ()
-offerBackup output = do
+offerBackup :: Safety -> FilePath -> IO ()
+offerBackup Dangerous _ =  return ()
+offerBackup Safe output =  do
   exists <- doesFileExist output
   when exists $ do
     fprint ("backup " % string % "? (y/n) [y]: ") f
@@ -86,7 +84,7 @@ offerBackup output = do
     defaultBak = f <.> "bak"
 
 
-genFile :: Text -> FilePath -> IO ()
-genFile input output = do
-    offerBackup output
+genFile :: Text -> FilePath -> Safety -> IO ()
+genFile input output safety = do
+    offerBackup safety output
     writeFile output input
