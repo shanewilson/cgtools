@@ -13,3 +13,7 @@ cabal.sandbox.config
 cabal.config
 cgtools-completion.sh
 cgtools-completion.sh.bak
+
+node_modules
+gulpfile.js
+package.json
