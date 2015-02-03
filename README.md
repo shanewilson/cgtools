@@ -18,7 +18,7 @@ Git Hooks and Changelog Generator based on Conventional Changelog
 
 ## Installation
 
-To install **cgtools** simply drop the bin into your project directory and run `./cgtools install -v`.
+To install **cgtools** simply drop the [bin](https://github.com/shanewilson/cgtools/releases/download/0.1.0/cgtools) into your project directory and run `./cgtools install -v`.
 
 ```
 > chmod +x cgtools          # Make cgtools executable
