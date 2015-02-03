@@ -6,7 +6,7 @@ Git Hooks and Changelog Generator based on Conventional Changelog
 
 - [Why](#why)
 - [What](#what)
-- [Install](#install)
+- [Installation](#installion)
 - [Git Hooks](#git-hooks)
 - [Change Log](#change-log)
 
@@ -16,26 +16,26 @@ Git Hooks and Changelog Generator based on Conventional Changelog
 ## What
 ... A single file that can be added to your project that will install git hooks to standardize git commits and generate change logs automagically ...
 
-## Install
+## Installation
 
 To install **cgtools** simply drop the bin into your project directory and run `./cgtools install -v`.
 
 ```
-$ chmod u+x cgtools
-$ ./cgtools install -v
+> chmod +x cgtools          # Make cgtools executable
+> ./cgtools install -v      # Install cgtools
 Checking dependencies...
 OK
 Generating Git Hooks...
 OK
 ```
 
-### Bash Completion
+### Tab completion in bash and zsh
 
-**cgtools** can generate *Bash Completion* with the flag `-b` or `--bash-completion`. You can test it out by sourcing the file: `source cgtools-completion.sh` or adding it to your `.bashrc`.
+**cgtools** can generate *tab completion* for bash and zsh with the flag `-b` or `--bash-completion`.
+You can test it out by sourcing the file: `source cgtools-completion.sh`.
 
 ```
-$ chmod u+x cgtools
-$ ./cgtools install -b -v
+> ./cgtools install -b -v         # Install cgtools with bash completion
 Checking dependencies...
 OK
 Generating Git Hooks...
@@ -47,7 +47,13 @@ $ ./cgtools <tab>
 --help     --verbose  --version  -h         -v         install    logs       validate
 ```
 
-Note: If you use `zsh` you might need to add the following to your `.zshrc`:
+#### bash instructions
+
+#### zsh instructions
+
+
+
+**Note**: If you use `zsh` you might need to add the following to your `.zshrc`:
 
 ```
 autoload bashcompinit
